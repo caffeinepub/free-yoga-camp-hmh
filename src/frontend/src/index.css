@@ -1,0 +1,138 @@
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/fonts/Outfit.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0.97 0.018 75;
+    --foreground: 0.22 0.04 50;
+    --card: 0.99 0.01 75;
+    --card-foreground: 0.22 0.04 50;
+    --popover: 0.99 0.01 75;
+    --popover-foreground: 0.22 0.04 50;
+    --primary: 0.68 0.18 52;
+    --primary-foreground: 0.99 0.01 75;
+    --secondary: 0.42 0.1 148;
+    --secondary-foreground: 0.99 0.01 75;
+    --muted: 0.93 0.025 75;
+    --muted-foreground: 0.52 0.05 55;
+    --accent: 0.9 0.06 75;
+    --accent-foreground: 0.25 0.06 50;
+    --destructive: 0.55 0.2 25;
+    --destructive-foreground: 0.99 0.01 75;
+    --border: 0.88 0.04 70;
+    --input: 0.88 0.04 70;
+    --ring: 0.68 0.18 52;
+    --radius: 0.75rem;
+    --chart-1: 0.68 0.18 52;
+    --chart-2: 0.42 0.1 148;
+    --chart-3: 0.62 0.14 30;
+    --chart-4: 0.55 0.12 200;
+    --chart-5: 0.72 0.15 90;
+    --sidebar: 0.95 0.025 75;
+    --sidebar-foreground: 0.22 0.04 50;
+    --sidebar-primary: 0.68 0.18 52;
+    --sidebar-primary-foreground: 0.99 0.01 75;
+    --sidebar-accent: 0.9 0.06 75;
+    --sidebar-accent-foreground: 0.25 0.06 50;
+    --sidebar-border: 0.88 0.04 70;
+    --sidebar-ring: 0.68 0.18 52;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+    line-height: 1.2;
+  }
+}
+
+@layer utilities {
+  .mandala-bg {
+    background-image: radial-gradient(
+        circle at 20% 50%,
+        oklch(0.68 0.18 52 / 0.06) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        oklch(0.42 0.1 148 / 0.06) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 60% 80%,
+        oklch(0.68 0.18 52 / 0.04) 0%,
+        transparent 40%
+      );
+  }
+
+  .hero-pattern {
+    background-image: radial-gradient(
+        ellipse at top,
+        oklch(0.68 0.18 52 / 0.12) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse at bottom right,
+        oklch(0.42 0.1 148 / 0.1) 0%,
+        transparent 60%
+      );
+  }
+
+  .om-divider {
+    position: relative;
+    text-align: center;
+  }
+
+  .om-divider::before,
+  .om-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+  }
+
+  .om-divider::before {
+    left: 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      oklch(0.68 0.18 52 / 0.4)
+    );
+  }
+
+  .om-divider::after {
+    right: 0;
+    background: linear-gradient(to left, transparent, oklch(0.68 0.18 52 / 0.4));
+  }
+}
