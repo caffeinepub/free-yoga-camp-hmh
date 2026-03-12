@@ -2,6 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Admission } from "../backend.d";
 import { useActor } from "./useActor";
 
+interface AttendanceActor {
+  markAttendance(admissionId: bigint, date: string): Promise<void>;
+  removeAttendance(admissionId: bigint, date: string): Promise<void>;
+  getAttendanceByDate(date: string): Promise<Array<bigint>>;
+  getAllAttendanceDates(): Promise<Array<string>>;
+}
+
 export function useGetAllAdmissions() {
   const { actor, isFetching } = useActor();
   return useQuery<Admission[]>({
@@ -65,6 +72,76 @@ export function useSubmitAdmission() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admissions"] });
       queryClient.invalidateQueries({ queryKey: ["admissionCount"] });
+    },
+  });
+}
+
+export function useGetAttendanceByDate(date: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint[]>({
+    queryKey: ["attendance", date],
+    queryFn: async () => {
+      if (!actor || !date) return [];
+      return (actor as unknown as AttendanceActor).getAttendanceByDate(date);
+    },
+    enabled: !!actor && !isFetching && !!date,
+  });
+}
+
+export function useGetAllAttendanceDates() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string[]>({
+    queryKey: ["attendanceDates"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as unknown as AttendanceActor).getAllAttendanceDates();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useMarkAttendance() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      admissionId,
+      date,
+    }: { admissionId: bigint; date: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      await (actor as unknown as AttendanceActor).markAttendance(
+        admissionId,
+        date,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["attendance", variables.date],
+      });
+      queryClient.invalidateQueries({ queryKey: ["attendanceDates"] });
+    },
+  });
+}
+
+export function useRemoveAttendance() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      admissionId,
+      date,
+    }: { admissionId: bigint; date: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      await (actor as unknown as AttendanceActor).removeAttendance(
+        admissionId,
+        date,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["attendance", variables.date],
+      });
+      queryClient.invalidateQueries({ queryKey: ["attendanceDates"] });
     },
   });
 }

@@ -30,4 +30,8 @@ export interface backendInterface {
     getTotalAdmissions(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
     submitAdmission(fullName: string, mobile: string, dob: string, idProofType: string, address: string, idProofFileKey: string, email: string): Promise<void>;
+    markAttendance(admissionId: bigint, date: string): Promise<void>;
+    removeAttendance(admissionId: bigint, date: string): Promise<void>;
+    getAttendanceByDate(date: string): Promise<Array<bigint>>;
+    getAllAttendanceDates(): Promise<Array<string>>;
 }
