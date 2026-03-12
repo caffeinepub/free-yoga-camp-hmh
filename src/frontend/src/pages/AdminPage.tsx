@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -10,17 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
-import {
-  useGetAllAdmissions,
-  useGetTotalAdmissions,
-  useIsCallerAdmin,
-} from "@/hooks/useQueries";
-import { useQueryClient } from "@tanstack/react-query";
+import { useGetAllAdmissions, useGetTotalAdmissions } from "@/hooks/useQueries";
 import { Loader2, LogIn, LogOut, Shield, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import type { Admission } from "../backend.d";
+
+const ADMIN_USERNAME = "Yogahmh#983240";
+const ADMIN_PASSWORD = "yoga$hmh^96740";
 
 function formatDate(ts: bigint): string {
   const ms = Number(ts / 1_000_000n);
@@ -34,35 +33,34 @@ function formatDate(ts: bigint): string {
 }
 
 export default function AdminPage() {
-  const { login, clear, loginStatus, identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
-  const isAuthenticated = !!identity;
-  const isLoggingIn = loginStatus === "logging-in";
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const { data: isAdmin, isLoading: isAdminLoading } = useIsCallerAdmin();
   const { data: admissions, isLoading: admissionsLoading } =
     useGetAllAdmissions();
   const { data: totalCount } = useGetTotalAdmissions();
 
-  const [loginError, setLoginError] = useState("");
-
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoginError("");
-    try {
-      await login();
-    } catch (err: any) {
-      if (err?.message === "User is already authenticated") {
-        await clear();
-        setTimeout(() => login(), 300);
-      } else {
-        setLoginError("लॉगिन में समस्या हुई। पुनः प्रयास करें।");
-      }
+    setIsLoggingIn(true);
+    await new Promise((r) => setTimeout(r, 400));
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+    } else {
+      setLoginError("Username या Password गलत है। पुनः प्रयास करें।");
     }
+    setIsLoggingIn(false);
   };
 
-  const handleLogout = async () => {
-    await clear();
-    queryClient.clear();
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setUsername("");
+    setPassword("");
+    setLoginError("");
   };
 
   if (!isAuthenticated) {
@@ -86,79 +84,63 @@ export default function AdminPage() {
                 एडमिन पैनल देखने के लिए लॉगिन करें
               </p>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {loginError && (
-                <p
-                  className="text-xs text-destructive text-center"
-                  data-ocid="admin.login.error_state"
-                >
-                  {loginError}
-                </p>
-              )}
-              <Button
-                onClick={handleLogin}
-                disabled={isLoggingIn}
-                data-ocid="admin.login.primary_button"
-                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                {isLoggingIn ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> लॉगिन हो
-                    रहा है...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2 h-4 w-4" /> Internet Identity से लॉगिन
-                    करें
-                  </>
+            <CardContent>
+              <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Username दर्ज करें"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    data-ocid="admin.login.input"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Password दर्ज करें"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    data-ocid="admin.login.password_input"
+                    required
+                  />
+                </div>
+                {loginError && (
+                  <p
+                    className="text-xs text-destructive text-center"
+                    data-ocid="admin.login.error_state"
+                  >
+                    {loginError}
+                  </p>
                 )}
-              </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoggingIn}
+                  data-ocid="admin.login.primary_button"
+                  className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> लॉगिन हो
+                      रहा है...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="mr-2 h-4 w-4" /> लॉगिन करें
+                    </>
+                  )}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </motion.div>
-      </main>
-    );
-  }
-
-  if (isAdminLoading) {
-    return (
-      <main className="min-h-screen mandala-bg flex items-center justify-center">
-        <div
-          data-ocid="admin.loading_state"
-          className="flex flex-col items-center gap-3"
-        >
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <p className="text-muted-foreground text-sm">जाँच हो रही है...</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <main className="min-h-screen mandala-bg flex items-center justify-center px-4">
-        <Card
-          className="border-destructive/30 max-w-sm w-full"
-          data-ocid="admin.error_state"
-        >
-          <CardContent className="pt-8 pb-8 text-center flex flex-col items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
-              <Shield className="w-7 h-7 text-destructive" />
-            </div>
-            <p className="font-semibold text-foreground">पहुँच अस्वीकृत</p>
-            <p className="text-sm text-muted-foreground">
-              आपके पास admin अधिकार नहीं हैं।
-            </p>
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              data-ocid="admin.logout.button"
-              className="border-destructive/30 text-destructive hover:bg-destructive/10"
-            >
-              <LogOut className="mr-2 h-4 w-4" /> लॉगआउट
-            </Button>
-          </CardContent>
-        </Card>
       </main>
     );
   }
