@@ -560,9 +560,6 @@ export default function AdminPage() {
                               DOB
                             </TableHead>
                             <TableHead className="font-semibold text-foreground">
-                              ID Type
-                            </TableHead>
-                            <TableHead className="font-semibold text-foreground">
                               पता
                             </TableHead>
                             <TableHead className="font-semibold text-foreground">
@@ -600,14 +597,6 @@ export default function AdminPage() {
                                 </TableCell>
                                 <TableCell className="text-sm">
                                   {admission.dob}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs border-primary/30 text-primary bg-primary/5"
-                                  >
-                                    {admission.idProofType}
-                                  </Badge>
                                 </TableCell>
                                 <TableCell className="text-sm max-w-[160px] truncate">
                                   {admission.address}

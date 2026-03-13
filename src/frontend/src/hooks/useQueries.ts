@@ -53,9 +53,7 @@ export function useSubmitAdmission() {
       fullName: string;
       mobile: string;
       dob: string;
-      idProofType: string;
       address: string;
-      idProofFileKey: string;
       email: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
@@ -63,9 +61,7 @@ export function useSubmitAdmission() {
         data.fullName,
         data.mobile,
         data.dob,
-        data.idProofType,
         data.address,
-        data.idProofFileKey,
         data.email,
       );
     },

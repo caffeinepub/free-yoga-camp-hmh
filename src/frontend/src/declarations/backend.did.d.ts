@@ -15,9 +15,7 @@ export interface Admission {
   'fullName' : string,
   'submittedAt' : bigint,
   'email' : string,
-  'idProofFileKey' : string,
   'address' : string,
-  'idProofType' : string,
   'mobile' : string,
 }
 export type UserRole = { 'admin' : null } |
@@ -58,7 +56,7 @@ export interface _SERVICE {
   'getTotalAdmissions' : ActorMethod<[], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'submitAdmission' : ActorMethod<
-    [string, string, string, string, string, string, string],
+    [string, string, string, string, string],
     undefined
   >,
 }

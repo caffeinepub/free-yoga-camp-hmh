@@ -29,9 +29,7 @@ export const Admission = IDL.Record({
   'fullName' : IDL.Text,
   'submittedAt' : IDL.Int,
   'email' : IDL.Text,
-  'idProofFileKey' : IDL.Text,
   'address' : IDL.Text,
-  'idProofType' : IDL.Text,
   'mobile' : IDL.Text,
 });
 
@@ -70,7 +68,7 @@ export const idlService = IDL.Service({
   'getTotalAdmissions' : IDL.Func([], [IDL.Nat], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'submitAdmission' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [],
       [],
     ),
@@ -100,9 +98,7 @@ export const idlFactory = ({ IDL }) => {
     'fullName' : IDL.Text,
     'submittedAt' : IDL.Int,
     'email' : IDL.Text,
-    'idProofFileKey' : IDL.Text,
     'address' : IDL.Text,
-    'idProofType' : IDL.Text,
     'mobile' : IDL.Text,
   });
   
@@ -141,7 +137,7 @@ export const idlFactory = ({ IDL }) => {
     'getTotalAdmissions' : IDL.Func([], [IDL.Nat], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'submitAdmission' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [],
         [],
       ),

@@ -2,13 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useGetTotalAdmissions, useSubmitAdmission } from "@/hooks/useQueries";
 import {
@@ -17,13 +10,11 @@ import {
   Loader2,
   MapPin,
   Phone,
-  Upload,
   Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ExternalBlob } from "../blob";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -50,16 +41,11 @@ export default function HomePage() {
     fullName: "",
     mobile: "",
     dob: "",
-    idProofType: "",
     address: "",
     email: "",
   });
-  const [idFile, setIdFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -67,11 +53,9 @@ export default function HomePage() {
     if (!form.mobile.match(/^[6-9]\d{9}$/))
       newErrors.mobile = "सही मोबाइल नंबर दर्ज करें";
     if (!form.dob) newErrors.dob = "जन्म तिथि आवश्यक है";
-    if (!form.idProofType) newErrors.idProofType = "ID प्रकार चुनें";
     if (!form.address.trim()) newErrors.address = "पता आवश्यक है";
     if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
       newErrors.email = "सही ईमेल दर्ज करें";
-    if (!idFile) newErrors.idFile = "ID प्रूफ फ़ाइल अपलोड करें";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -81,38 +65,16 @@ export default function HomePage() {
     if (!validate()) return;
 
     try {
-      setIsUploading(true);
-      const fileBytes = new Uint8Array(await idFile!.arrayBuffer());
-      const blob = ExternalBlob.fromBytes(fileBytes).withUploadProgress(
-        (pct) => {
-          setUploadProgress(pct);
-        },
-      );
-      await blob.getBytes();
-      const fileKey = blob.getDirectURL();
-      setIsUploading(false);
-
-      await submitMutation.mutateAsync({
-        ...form,
-        idProofFileKey: fileKey,
-      });
-
+      await submitMutation.mutateAsync(form);
       setSubmitted(true);
       toast.success("एडमिशन सफलतापूर्वक दर्ज हो गया!");
     } catch (err) {
-      setIsUploading(false);
       toast.error("कुछ गलत हुआ। कृपया पुनः प्रयास करें।");
       console.error(err);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setIdFile(file);
-    if (file) setErrors((prev) => ({ ...prev, idFile: "" }));
-  };
-
-  const isPending = isUploading || submitMutation.isPending;
+  const isPending = submitMutation.isPending;
 
   return (
     <main className="min-h-screen mandala-bg">
@@ -284,12 +246,9 @@ export default function HomePage() {
                           fullName: "",
                           mobile: "",
                           dob: "",
-                          idProofType: "",
                           address: "",
                           email: "",
                         });
-                        setIdFile(null);
-                        setUploadProgress(0);
                       }}
                     >
                       नया फॉर्म भरें
@@ -399,53 +358,6 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      {/* ID Proof Type */}
-                      <div className="space-y-1.5">
-                        <Label className="font-medium">
-                          ID प्रूफ प्रकार <span className="text-primary">*</span>
-                          <span className="text-muted-foreground font-normal ml-1 text-xs">
-                            (ID Proof Type)
-                          </span>
-                        </Label>
-                        <Select
-                          value={form.idProofType}
-                          onValueChange={(v) =>
-                            setForm((p) => ({ ...p, idProofType: v }))
-                          }
-                        >
-                          <SelectTrigger
-                            data-ocid="form.idproof.select"
-                            className={
-                              errors.idProofType ? "border-destructive" : ""
-                            }
-                          >
-                            <SelectValue placeholder="ID प्रकार चुनें" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Aadhar Card">
-                              आधार कार्ड (Aadhar Card)
-                            </SelectItem>
-                            <SelectItem value="PAN Card">
-                              पैन कार्ड (PAN Card)
-                            </SelectItem>
-                            <SelectItem value="Voter ID">
-                              मतदाता पहचान पत्र (Voter ID)
-                            </SelectItem>
-                            <SelectItem value="Driving License">
-                              ड्राइविंग लाइसेंस (Driving License)
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {errors.idProofType && (
-                          <p
-                            className="text-xs text-destructive"
-                            data-ocid="form.idproof.error_state"
-                          >
-                            {errors.idProofType}
-                          </p>
-                        )}
-                      </div>
-
                       {/* Address */}
                       <div className="space-y-1.5">
                         <Label htmlFor="address" className="font-medium">
@@ -462,7 +374,9 @@ export default function HomePage() {
                           onChange={(e) =>
                             setForm((p) => ({ ...p, address: e.target.value }))
                           }
-                          className={`resize-none ${errors.address ? "border-destructive" : ""}`}
+                          className={`resize-none ${
+                            errors.address ? "border-destructive" : ""
+                          }`}
                           rows={3}
                           autoComplete="street-address"
                         />
@@ -472,77 +386,6 @@ export default function HomePage() {
                             data-ocid="form.address.error_state"
                           >
                             {errors.address}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* ID Proof File */}
-                      <div className="space-y-1.5">
-                        <Label className="font-medium">
-                          ID प्रूफ फ़ाइल <span className="text-primary">*</span>
-                          <span className="text-muted-foreground font-normal ml-1 text-xs">
-                            (ID Proof File Upload)
-                          </span>
-                        </Label>
-                        <div
-                          className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors hover:bg-primary/5 ${
-                            errors.idFile
-                              ? "border-destructive"
-                              : "border-border hover:border-primary/40"
-                          } ${idFile ? "bg-primary/5 border-primary/30" : ""}`}
-                          onClick={() => fileInputRef.current?.click()}
-                          onKeyDown={(e) =>
-                            (e.key === "Enter" || e.key === " ") &&
-                            fileInputRef.current?.click()
-                          }
-                          data-ocid="form.idfile.dropzone"
-                        >
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*,.pdf"
-                            className="hidden"
-                            onChange={handleFileChange}
-                            data-ocid="form.idfile.upload_button"
-                          />
-                          {idFile ? (
-                            <div className="flex items-center justify-center gap-2 text-primary">
-                              <CheckCircle2 className="w-5 h-5" />
-                              <span className="text-sm font-medium truncate max-w-xs">
-                                {idFile.name}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-1.5">
-                              <Upload className="w-8 h-8 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground">
-                                फ़ाइल चुनें या यहाँ छोड़ें
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Image या PDF · Max 10MB
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        {isUploading && (
-                          <div className="space-y-1">
-                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary rounded-full transition-all"
-                                style={{ width: `${uploadProgress}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground text-center">
-                              अपलोड हो रहा है... {uploadProgress}%
-                            </p>
-                          </div>
-                        )}
-                        {errors.idFile && (
-                          <p
-                            className="text-xs text-destructive"
-                            data-ocid="form.idfile.error_state"
-                          >
-                            {errors.idFile}
                           </p>
                         )}
                       </div>
@@ -585,9 +428,7 @@ export default function HomePage() {
                         {isPending ? (
                           <>
                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            {isUploading
-                              ? "अपलोड हो रहा है..."
-                              : "जमा हो रहा है..."}
+                            जमा हो रहा है...
                           </>
                         ) : (
                           "🙏 एडमिशन जमा करें · Submit"

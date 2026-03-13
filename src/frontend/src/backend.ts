@@ -94,9 +94,7 @@ export interface Admission {
     fullName: string;
     submittedAt: bigint;
     email: string;
-    idProofFileKey: string;
     address: string;
-    idProofType: string;
     mobile: string;
 }
 export interface _CaffeineStorageCreateCertificateResult {
@@ -129,7 +127,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getTotalAdmissions(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
-    submitAdmission(fullName: string, mobile: string, dob: string, idProofType: string, address: string, idProofFileKey: string, email: string): Promise<void>;
+    submitAdmission(fullName: string, mobile: string, dob: string, address: string, email: string): Promise<void>;
 }
 import type { UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -316,17 +314,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async submitAdmission(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string): Promise<void> {
+    async submitAdmission(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.submitAdmission(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                const result = await this.actor.submitAdmission(arg0, arg1, arg2, arg3, arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.submitAdmission(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            const result = await this.actor.submitAdmission(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }

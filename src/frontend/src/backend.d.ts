@@ -12,9 +12,7 @@ export interface Admission {
     fullName: string;
     submittedAt: bigint;
     email: string;
-    idProofFileKey: string;
     address: string;
-    idProofType: string;
     mobile: string;
 }
 export enum UserRole {
@@ -29,7 +27,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getTotalAdmissions(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
-    submitAdmission(fullName: string, mobile: string, dob: string, idProofType: string, address: string, idProofFileKey: string, email: string): Promise<void>;
+    submitAdmission(fullName: string, mobile: string, dob: string, address: string, email: string): Promise<void>;
     markAttendance(admissionId: bigint, date: string): Promise<void>;
     removeAttendance(admissionId: bigint, date: string): Promise<void>;
     getAttendanceByDate(date: string): Promise<Array<bigint>>;

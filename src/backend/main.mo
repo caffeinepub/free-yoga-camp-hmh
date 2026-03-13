@@ -1,6 +1,5 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
-import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
@@ -14,7 +13,9 @@ actor {
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  type Admission = {
+  // OLD type kept for stable variable compatibility with existing data.
+  // Do NOT remove this type -- it must match the previously stored Admission shape.
+  type OldAdmission = {
     fullName : Text;
     mobile : Text;
     dob : Text;
@@ -25,8 +26,27 @@ actor {
     submittedAt : Int;
   };
 
-  let admissionsStore = Map.empty<Nat, Admission>();
+  // NEW type without id proof fields
+  type Admission = {
+    fullName : Text;
+    mobile : Text;
+    dob : Text;
+    address : Text;
+    email : Text;
+    submittedAt : Int;
+  };
+
+  // Keep old store declared with OldAdmission type so stable data is compatible.
+  // After migration this store is no longer used for writes.
+  let admissionsStore = Map.empty<Nat, OldAdmission>();
+
+  // New store without id proof fields
+  let admissionsStoreV2 = Map.empty<Nat, Admission>();
+
   var nextAdmissionId = 0;
+
+  // Migration flag -- set to true after first postupgrade run
+  stable var _admissionsMigrationDone : Bool = false;
 
   // attendance: key is "admissionId:date", value is Bool
   let attendanceStore = Map.empty<Text, Bool>();
@@ -35,50 +55,69 @@ actor {
     admissionId.toText() # ":" # date;
   };
 
+  // Migrate old admissions (with idProofType/idProofFileKey) into the new store.
+  system func postupgrade() {
+    if (not _admissionsMigrationDone) {
+      var id = 0;
+      while (id < nextAdmissionId) {
+        switch (admissionsStore.get(id)) {
+          case (?old) {
+            admissionsStoreV2.add(id, {
+              fullName = old.fullName;
+              mobile = old.mobile;
+              dob = old.dob;
+              address = old.address;
+              email = old.email;
+              submittedAt = old.submittedAt;
+            });
+          };
+          case (null) {};
+        };
+        id += 1;
+      };
+      _admissionsMigrationDone := true;
+    };
+  };
+
   public shared ({ caller }) func submitAdmission(
     fullName : Text,
     mobile : Text,
     dob : Text,
-    idProofType : Text,
     address : Text,
-    idProofFileKey : Text,
     email : Text,
   ) : async () {
     let admission : Admission = {
       fullName;
       mobile;
       dob;
-      idProofType;
       address;
-      idProofFileKey;
       email;
       submittedAt = Time.now();
     };
-    let currentId = nextAdmissionId;
     func findNextAvailableId(id : Nat) : Nat {
-      switch (admissionsStore.get(id)) {
+      switch (admissionsStoreV2.get(id)) {
         case (null) { id };
         case (?_) { findNextAvailableId(id + 1) };
       };
     };
-    let availableId = findNextAvailableId(currentId);
+    let availableId = findNextAvailableId(nextAdmissionId);
     nextAdmissionId := availableId + 1;
-    admissionsStore.add(availableId, admission);
+    admissionsStoreV2.add(availableId, admission);
   };
 
   public query ({ caller }) func getTotalAdmissions() : async Nat {
-    admissionsStore.size();
+    admissionsStoreV2.size();
   };
 
   public query ({ caller }) func getAdmission(id : Nat) : async Admission {
-    switch (admissionsStore.get(id)) {
+    switch (admissionsStoreV2.get(id)) {
       case (null) { Runtime.trap("Admission ID does not exist") };
       case (?admission) { admission };
     };
   };
 
   public query ({ caller }) func getAllAdmissions() : async [Admission] {
-    admissionsStore.values().toArray();
+    admissionsStoreV2.values().toArray();
   };
 
   public shared ({ caller }) func markAttendance(admissionId : Nat, date : Text) : async () {
