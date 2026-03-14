@@ -25,6 +25,7 @@ import {
   CalendarCheck,
   CalendarDays,
   CheckCircle2,
+  Download,
   Loader2,
   LogIn,
   LogOut,
@@ -82,6 +83,26 @@ function formatDisplayDate(dateStr: string): string {
   return `${dd} ${months[Number.parseInt(mm, 10) - 1]} ${yyyy}`;
 }
 
+function downloadCSV(filename: string, rows: string[][]): void {
+  const csvContent = rows
+    .map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+    )
+    .join("\n");
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function AttendanceTab({ admissions }: { admissions: Admission[] }) {
   const [selectedDate, setSelectedDate] = useState(todayString());
 
@@ -114,6 +135,18 @@ function AttendanceTab({ admissions }: { admissions: Admission[] }) {
         removeMutation.variables?.admissionId === BigInt(idx) &&
         removeMutation.variables?.date === selectedDate)
     );
+  };
+
+  const handleDownloadAttendance = () => {
+    const header = ["Sr. No.", "Reg. Code", "नाम", "मोबाइल", "स्थिति"];
+    const rows = admissions.map((admission, idx) => [
+      String(idx + 1),
+      formatRegCode(idx),
+      admission.fullName,
+      admission.mobile,
+      presentSet.has(idx) ? "उपस्थित" : "अनुपस्थित",
+    ]);
+    downloadCSV(`attendance-${selectedDate}.csv`, [header, ...rows]);
   };
 
   return (
@@ -149,6 +182,19 @@ function AttendanceTab({ admissions }: { admissions: Admission[] }) {
             </span>
           </div>
         </div>
+
+        {admissions.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadAttendance}
+            data-ocid="admin.attendance.download.button"
+            className="gap-2 border-border hover:border-primary/40 hover:text-primary sm:ml-auto"
+          >
+            <Download className="w-4 h-4" />
+            Download CSV
+          </Button>
+        )}
       </div>
 
       {/* Past dates quick nav */}
@@ -344,6 +390,31 @@ export default function AdminPage() {
     setLoginError("");
   };
 
+  const handleDownloadAdmissions = () => {
+    if (!admissions || admissions.length === 0) return;
+    const header = [
+      "Sr. No.",
+      "Reg. Code",
+      "नाम",
+      "मोबाइल",
+      "DOB",
+      "पता",
+      "व्यवसाय",
+      "Submitted At",
+    ];
+    const rows = admissions.map((admission, idx) => [
+      String(idx + 1),
+      formatRegCode(idx),
+      admission.fullName,
+      admission.mobile,
+      admission.dob,
+      admission.address,
+      (admission as Admission & { occupation?: string }).occupation ?? "",
+      formatDate(admission.submittedAt),
+    ]);
+    downloadCSV("admission-list.csv", [header, ...rows]);
+  };
+
   if (!isAuthenticated) {
     return (
       <main className="min-h-screen mandala-bg flex items-center justify-center px-4">
@@ -512,10 +583,22 @@ export default function AdminPage() {
             {/* Admissions Tab */}
             <TabsContent value="admissions">
               <Card className="border-border shadow-xs">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-semibold">
                     एडमिशन सूची · Admission List
                   </CardTitle>
+                  {admissions && admissions.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadAdmissions}
+                      data-ocid="admin.admissions.download.button"
+                      className="gap-2 border-border hover:border-primary/40 hover:text-primary"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download CSV
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="p-0">
                   {admissionsLoading ? (
