@@ -14,7 +14,7 @@ export interface Admission {
   'dob' : string,
   'fullName' : string,
   'submittedAt' : bigint,
-  'email' : string,
+  'occupation' : string,
   'address' : string,
   'mobile' : string,
 }
@@ -59,6 +59,10 @@ export interface _SERVICE {
     [string, string, string, string, string],
     undefined
   >,
+  'markAttendance' : ActorMethod<[bigint, string], undefined>,
+  'removeAttendance' : ActorMethod<[bigint, string], undefined>,
+  'getAttendanceByDate' : ActorMethod<[string], Array<bigint>>,
+  'getAllAttendanceDates' : ActorMethod<[], Array<string>>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

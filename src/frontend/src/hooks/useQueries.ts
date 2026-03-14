@@ -1,13 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Admission } from "../backend.d";
+import type { Admission } from "../backend";
 import { useActor } from "./useActor";
-
-interface AttendanceActor {
-  markAttendance(admissionId: bigint, date: string): Promise<void>;
-  removeAttendance(admissionId: bigint, date: string): Promise<void>;
-  getAttendanceByDate(date: string): Promise<Array<bigint>>;
-  getAllAttendanceDates(): Promise<Array<string>>;
-}
 
 export function useGetAllAdmissions() {
   const { actor, isFetching } = useActor();
@@ -54,7 +47,7 @@ export function useSubmitAdmission() {
       mobile: string;
       dob: string;
       address: string;
-      email: string;
+      occupation: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
       await actor.submitAdmission(
@@ -62,7 +55,7 @@ export function useSubmitAdmission() {
         data.mobile,
         data.dob,
         data.address,
-        data.email,
+        data.occupation,
       );
     },
     onSuccess: () => {
@@ -78,7 +71,7 @@ export function useGetAttendanceByDate(date: string) {
     queryKey: ["attendance", date],
     queryFn: async () => {
       if (!actor || !date) return [];
-      return (actor as unknown as AttendanceActor).getAttendanceByDate(date);
+      return actor.getAttendanceByDate(date);
     },
     enabled: !!actor && !isFetching && !!date,
   });
@@ -90,7 +83,7 @@ export function useGetAllAttendanceDates() {
     queryKey: ["attendanceDates"],
     queryFn: async () => {
       if (!actor) return [];
-      return (actor as unknown as AttendanceActor).getAllAttendanceDates();
+      return actor.getAllAttendanceDates();
     },
     enabled: !!actor && !isFetching,
   });
@@ -105,10 +98,7 @@ export function useMarkAttendance() {
       date,
     }: { admissionId: bigint; date: string }) => {
       if (!actor) throw new Error("Actor not available");
-      await (actor as unknown as AttendanceActor).markAttendance(
-        admissionId,
-        date,
-      );
+      await actor.markAttendance(admissionId, date);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -128,10 +118,7 @@ export function useRemoveAttendance() {
       date,
     }: { admissionId: bigint; date: string }) => {
       if (!actor) throw new Error("Actor not available");
-      await (actor as unknown as AttendanceActor).removeAttendance(
-        admissionId,
-        date,
-      );
+      await actor.removeAttendance(admissionId, date);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

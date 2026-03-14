@@ -563,7 +563,7 @@ export default function AdminPage() {
                               पता
                             </TableHead>
                             <TableHead className="font-semibold text-foreground">
-                              Email
+                              व्यवसाय
                             </TableHead>
                             <TableHead className="font-semibold text-foreground">
                               समय
@@ -602,7 +602,11 @@ export default function AdminPage() {
                                   {admission.address}
                                 </TableCell>
                                 <TableCell className="text-sm">
-                                  {admission.email}
+                                  {(
+                                    admission as Admission & {
+                                      occupation?: string;
+                                    }
+                                  ).occupation ?? "—"}
                                 </TableCell>
                                 <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                                   {formatDate(admission.submittedAt)}

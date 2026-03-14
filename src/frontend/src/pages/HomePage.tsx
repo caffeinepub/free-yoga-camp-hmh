@@ -42,7 +42,7 @@ export default function HomePage() {
     mobile: "",
     dob: "",
     address: "",
-    email: "",
+    occupation: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,8 +54,7 @@ export default function HomePage() {
       newErrors.mobile = "सही मोबाइल नंबर दर्ज करें";
     if (!form.dob) newErrors.dob = "जन्म तिथि आवश्यक है";
     if (!form.address.trim()) newErrors.address = "पता आवश्यक है";
-    if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
-      newErrors.email = "सही ईमेल दर्ज करें";
+    if (!form.occupation.trim()) newErrors.occupation = "व्यवसाय आवश्यक है";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -247,7 +246,7 @@ export default function HomePage() {
                           mobile: "",
                           dob: "",
                           address: "",
-                          email: "",
+                          occupation: "",
                         });
                       }}
                     >
@@ -390,30 +389,36 @@ export default function HomePage() {
                         )}
                       </div>
 
-                      {/* Email */}
+                      {/* Occupation */}
                       <div className="space-y-1.5">
-                        <Label htmlFor="email" className="font-medium">
-                          Gmail / ईमेल <span className="text-primary">*</span>
+                        <Label htmlFor="occupation" className="font-medium">
+                          व्यवसाय <span className="text-primary">*</span>
+                          <span className="text-muted-foreground font-normal ml-1 text-xs">
+                            (Occupation)
+                          </span>
                         </Label>
                         <Input
-                          id="email"
-                          data-ocid="form.email.input"
-                          type="email"
-                          placeholder="yourname@gmail.com"
-                          value={form.email}
+                          id="occupation"
+                          data-ocid="form.occupation.input"
+                          placeholder="जैसे: शिक्षक, व्यापारी, गृहिणी"
+                          value={form.occupation}
                           onChange={(e) =>
-                            setForm((p) => ({ ...p, email: e.target.value }))
+                            setForm((p) => ({
+                              ...p,
+                              occupation: e.target.value,
+                            }))
                           }
-                          className={errors.email ? "border-destructive" : ""}
-                          autoComplete="email"
-                          style={{ fontSize: "16px" }}
+                          className={
+                            errors.occupation ? "border-destructive" : ""
+                          }
+                          autoComplete="organization-title"
                         />
-                        {errors.email && (
+                        {errors.occupation && (
                           <p
                             className="text-xs text-destructive"
-                            data-ocid="form.email.error_state"
+                            data-ocid="form.occupation.error_state"
                           >
-                            {errors.email}
+                            {errors.occupation}
                           </p>
                         )}
                       </div>

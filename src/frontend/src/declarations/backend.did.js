@@ -28,7 +28,7 @@ export const Admission = IDL.Record({
   'dob' : IDL.Text,
   'fullName' : IDL.Text,
   'submittedAt' : IDL.Int,
-  'email' : IDL.Text,
+  'occupation' : IDL.Text,
   'address' : IDL.Text,
   'mobile' : IDL.Text,
 });
@@ -72,6 +72,10 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'markAttendance' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'removeAttendance' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'getAttendanceByDate' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Nat)], ['query']),
+  'getAllAttendanceDates' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
 });
 
 export const idlInitArgs = [];
@@ -97,7 +101,7 @@ export const idlFactory = ({ IDL }) => {
     'dob' : IDL.Text,
     'fullName' : IDL.Text,
     'submittedAt' : IDL.Int,
-    'email' : IDL.Text,
+    'occupation' : IDL.Text,
     'address' : IDL.Text,
     'mobile' : IDL.Text,
   });
@@ -141,6 +145,10 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'markAttendance' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'removeAttendance' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'getAttendanceByDate' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Nat)], ['query']),
+    'getAllAttendanceDates' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   });
 };
 

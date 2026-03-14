@@ -13,8 +13,7 @@ actor {
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // OLD type kept for stable variable compatibility with existing data.
-  // Do NOT remove this type -- it must match the previously stored Admission shape.
+  // Original type for stable variable compatibility
   type OldAdmission = {
     fullName : Text;
     mobile : Text;
@@ -26,8 +25,8 @@ actor {
     submittedAt : Int;
   };
 
-  // NEW type without id proof fields
-  type Admission = {
+  // V2 type (had email, no id proof)
+  type AdmissionV2 = {
     fullName : Text;
     mobile : Text;
     dob : Text;
@@ -36,17 +35,24 @@ actor {
     submittedAt : Int;
   };
 
-  // Keep old store declared with OldAdmission type so stable data is compatible.
-  // After migration this store is no longer used for writes.
-  let admissionsStore = Map.empty<Nat, OldAdmission>();
+  // Current type: no email, has occupation
+  type Admission = {
+    fullName : Text;
+    mobile : Text;
+    dob : Text;
+    address : Text;
+    occupation : Text;
+    submittedAt : Int;
+  };
 
-  // New store without id proof fields
-  let admissionsStoreV2 = Map.empty<Nat, Admission>();
+  let admissionsStore = Map.empty<Nat, OldAdmission>();
+  let admissionsStoreV2 = Map.empty<Nat, AdmissionV2>();
+  let admissionsStoreV3 = Map.empty<Nat, Admission>();
 
   var nextAdmissionId = 0;
 
-  // Migration flag -- set to true after first postupgrade run
   stable var _admissionsMigrationDone : Bool = false;
+  stable var _admissionsMigrationV3Done : Bool = false;
 
   // attendance: key is "admissionId:date", value is Bool
   let attendanceStore = Map.empty<Text, Bool>();
@@ -55,7 +61,6 @@ actor {
     admissionId.toText() # ":" # date;
   };
 
-  // Migrate old admissions (with idProofType/idProofFileKey) into the new store.
   system func postupgrade() {
     if (not _admissionsMigrationDone) {
       var id = 0;
@@ -77,6 +82,26 @@ actor {
       };
       _admissionsMigrationDone := true;
     };
+    if (not _admissionsMigrationV3Done) {
+      var id = 0;
+      while (id < nextAdmissionId) {
+        switch (admissionsStoreV2.get(id)) {
+          case (?old) {
+            admissionsStoreV3.add(id, {
+              fullName = old.fullName;
+              mobile = old.mobile;
+              dob = old.dob;
+              address = old.address;
+              occupation = "";
+              submittedAt = old.submittedAt;
+            });
+          };
+          case (null) {};
+        };
+        id += 1;
+      };
+      _admissionsMigrationV3Done := true;
+    };
   };
 
   public shared ({ caller }) func submitAdmission(
@@ -84,40 +109,40 @@ actor {
     mobile : Text,
     dob : Text,
     address : Text,
-    email : Text,
+    occupation : Text,
   ) : async () {
     let admission : Admission = {
       fullName;
       mobile;
       dob;
       address;
-      email;
+      occupation;
       submittedAt = Time.now();
     };
     func findNextAvailableId(id : Nat) : Nat {
-      switch (admissionsStoreV2.get(id)) {
+      switch (admissionsStoreV3.get(id)) {
         case (null) { id };
         case (?_) { findNextAvailableId(id + 1) };
       };
     };
     let availableId = findNextAvailableId(nextAdmissionId);
     nextAdmissionId := availableId + 1;
-    admissionsStoreV2.add(availableId, admission);
+    admissionsStoreV3.add(availableId, admission);
   };
 
   public query ({ caller }) func getTotalAdmissions() : async Nat {
-    admissionsStoreV2.size();
+    admissionsStoreV3.size();
   };
 
   public query ({ caller }) func getAdmission(id : Nat) : async Admission {
-    switch (admissionsStoreV2.get(id)) {
+    switch (admissionsStoreV3.get(id)) {
       case (null) { Runtime.trap("Admission ID does not exist") };
       case (?admission) { admission };
     };
   };
 
   public query ({ caller }) func getAllAdmissions() : async [Admission] {
-    admissionsStoreV2.values().toArray();
+    admissionsStoreV3.values().toArray();
   };
 
   public shared ({ caller }) func markAttendance(admissionId : Nat, date : Text) : async () {
@@ -147,7 +172,6 @@ actor {
   public query ({ caller }) func getAllAttendanceDates() : async [Text] {
     var datesSet = Map.empty<Text, Bool>();
     for (key in attendanceStore.keys()) {
-      // key format: "admissionId:date"
       let parts = key.split(#char ':');
       let partsArray = parts.toArray();
       if (partsArray.size() >= 2) {

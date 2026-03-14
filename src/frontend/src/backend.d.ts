@@ -11,9 +11,9 @@ export interface Admission {
     dob: string;
     fullName: string;
     submittedAt: bigint;
-    email: string;
     address: string;
     mobile: string;
+    occupation: string;
 }
 export enum UserRole {
     admin = "admin",
@@ -27,7 +27,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getTotalAdmissions(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
-    submitAdmission(fullName: string, mobile: string, dob: string, address: string, email: string): Promise<void>;
+    submitAdmission(fullName: string, mobile: string, dob: string, address: string, occupation: string): Promise<void>;
     markAttendance(admissionId: bigint, date: string): Promise<void>;
     removeAttendance(admissionId: bigint, date: string): Promise<void>;
     getAttendanceByDate(date: string): Promise<Array<bigint>>;

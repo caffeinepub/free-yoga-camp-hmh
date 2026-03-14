@@ -93,7 +93,7 @@ export interface Admission {
     dob: string;
     fullName: string;
     submittedAt: bigint;
-    email: string;
+    occupation: string;
     address: string;
     mobile: string;
 }
@@ -127,7 +127,11 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getTotalAdmissions(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
-    submitAdmission(fullName: string, mobile: string, dob: string, address: string, email: string): Promise<void>;
+    submitAdmission(fullName: string, mobile: string, dob: string, address: string, occupation: string): Promise<void>;
+    markAttendance(admissionId: bigint, date: string): Promise<void>;
+    removeAttendance(admissionId: bigint, date: string): Promise<void>;
+    getAttendanceByDate(date: string): Promise<Array<bigint>>;
+    getAllAttendanceDates(): Promise<Array<string>>;
 }
 import type { UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -325,6 +329,62 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.submitAdmission(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async markAttendance(arg0: bigint, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.markAttendance(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.markAttendance(arg0, arg1);
+            return result;
+        }
+    }
+    async removeAttendance(arg0: bigint, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeAttendance(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeAttendance(arg0, arg1);
+            return result;
+        }
+    }
+    async getAttendanceByDate(arg0: string): Promise<Array<bigint>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAttendanceByDate(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAttendanceByDate(arg0);
+            return result;
+        }
+    }
+    async getAllAttendanceDates(): Promise<Array<string>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllAttendanceDates();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllAttendanceDates();
             return result;
         }
     }
